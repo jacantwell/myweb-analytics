@@ -29,15 +29,19 @@ The CDK stack provisions:
 
 ## Setup
 
-1. **Create virtual environment and install dependencies**:
+1. **Install UV** (if not already installed):
    ```bash
-   cd infrastructure
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
-2. **Bootstrap CDK** (first time only per AWS account/region):
+2. **Install dependencies with UV**:
+   ```bash
+   cd infrastructure
+   uv sync
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. **Bootstrap CDK** (first time only per AWS account/region):
    ```bash
    cdk bootstrap
    ```

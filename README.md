@@ -32,7 +32,8 @@ CloudFront (with logging) → S3 Logs → Log Processor → PostgreSQL → Strea
 ### Prerequisites
 
 - **Python 3.11+**
-- **Docker & Docker Compose** (for local PostgreSQL)
+- **[UV](https://docs.astral.sh/uv/)** - Modern Python package manager
+- **Docker & Docker Compose V2** (for local PostgreSQL)
 - **AWS CLI** (for AWS deployment)
 - **Node.js & npm** (for AWS CDK)
 
@@ -44,11 +45,9 @@ CloudFront (with logging) → S3 Logs → Log Processor → PostgreSQL → Strea
    cd myweb-analytics
    ```
 
-2. **Create virtual environment and install dependencies**
+2. **Install UV** (if not already installed)
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
 3. **Set up environment variables**
@@ -57,24 +56,25 @@ CloudFront (with logging) → S3 Logs → Log Processor → PostgreSQL → Strea
    # Edit .env and ensure USE_AWS_RDS=false for local development
    ```
 
-4. **Start PostgreSQL with Docker Compose**
+4. **Start PostgreSQL with Docker Compose V2**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
-5. **Initialize the database**
+5. **Set up backend (database & log processing)**
    ```bash
-   python scripts/init_database.py
+   cd backend
+   uv sync
+   uv run python scripts/init_database.py
+   uv run python scripts/test_connection.py
+   cd ..
    ```
 
-6. **Test the connection**
+6. **Run the Streamlit dashboard** (coming in Phase 4)
    ```bash
-   python scripts/test_connection.py
-   ```
-
-7. **Run the Streamlit dashboard** (coming in Phase 4)
-   ```bash
-   streamlit run streamlit_app/Home.py
+   cd streamlit_app
+   uv sync
+   uv run streamlit run Home.py
    ```
 
 ### Option 2: AWS Deployment
@@ -92,11 +92,11 @@ CloudFront (with logging) → S3 Logs → Log Processor → PostgreSQL → Strea
 3. **Deploy infrastructure**
    ```bash
    cd infrastructure
-   python3 -m venv .venv
+   uv sync
    source .venv/bin/activate
-   pip install -r requirements.txt
    cdk bootstrap  # First time only
    cdk deploy
+   cd ..
    ```
 
 4. **Update .env with RDS endpoint**
@@ -109,45 +109,47 @@ CloudFront (with logging) → S3 Logs → Log Processor → PostgreSQL → Strea
 
 5. **Initialize the database**
    ```bash
-   python scripts/init_database.py
+   cd backend
+   uv sync
+   uv run python scripts/init_database.py
    ```
 
 ## 📁 Project Structure
 
 ```
 myweb-analytics/
-├── README.md
-├── project-scope.md          # Detailed project requirements
-├── requirements.txt          # Python dependencies
-├── docker-compose.yml        # Local PostgreSQL setup
-├── .env.example              # Environment configuration template
+├── README.md                # Main documentation
+├── project-scope.md         # Detailed project requirements
+├── docker-compose.yml       # Local PostgreSQL setup
+├── .env.example             # Environment configuration template
 │
-├── infrastructure/           # AWS CDK Infrastructure as Code
+├── backend/                 # Backend services (separate venv)
+│   ├── pyproject.toml       # UV project file
+│   ├── .python-version      # Python version (3.11)
+│   ├── database/            # SQLAlchemy models & connection
+│   │   ├── models.py
+│   │   ├── connection.py
+│   │   └── queries.py
+│   ├── log_processor/       # CloudFront log processing (Phase 2)
+│   │   ├── parser.py
+│   │   ├── enrichment.py
+│   │   └── loader.py
+│   └── scripts/             # Utility scripts
+│       ├── init_database.py
+│       └── test_connection.py
+│
+├── infrastructure/          # AWS CDK (separate venv)
+│   ├── pyproject.toml       # UV project file
+│   ├── .python-version      # Python version (3.11)
 │   ├── app.py               # CDK app entry point
 │   ├── analytics_stack.py   # Main stack (VPC, RDS, S3)
-│   ├── cdk.json             # CDK configuration
-│   └── README.md            # Infrastructure documentation
+│   └── cdk.json             # CDK configuration
 │
-├── database/                 # Database layer
-│   ├── __init__.py
-│   ├── models.py            # SQLAlchemy ORM models
-│   ├── connection.py        # Database connection management
-│   └── queries.py           # Complex analytical queries (coming)
-│
-├── log_processor/           # CloudFront log processing (Phase 2)
-│   ├── parser.py            # Log file parser
-│   ├── enrichment.py        # User-agent & GeoIP enrichment
-│   └── loader.py            # Batch loading to database
-│
-├── streamlit_app/           # Streamlit dashboard (Phase 4)
-│   ├── Home.py              # Main dashboard
-│   ├── config.py            # Dashboard configuration
+├── streamlit_app/           # Dashboard (separate venv)
+│   ├── pyproject.toml       # UV project file
+│   ├── .python-version      # Python version (3.11)
+│   ├── Home.py              # Main dashboard (Phase 4)
 │   └── pages/               # Multi-page app sections
-│
-├── scripts/                 # Utility scripts
-│   ├── init_database.py     # Initialize database tables
-│   ├── test_connection.py   # Test database connection
-│   └── generate_sample_logs.py  # Generate test data (coming)
 │
 ├── tests/                   # Unit tests (coming)
 └── docs/                    # Additional documentation
@@ -273,12 +275,13 @@ See `project-scope.md` for 15+ additional complex queries.
 
 ## 🚦 Development Roadmap
 
-### ✅ Phase 1: Infrastructure & Database Setup (CURRENT)
-- [x] Project structure
+### ✅ Phase 1: Infrastructure & Database Setup (COMPLETE)
+- [x] Monorepo structure with separate venvs (backend, infrastructure, streamlit_app)
+- [x] UV-based dependency management
 - [x] AWS CDK infrastructure code
 - [x] Docker Compose for local PostgreSQL
-- [x] SQLAlchemy models
-- [x] Database connection management
+- [x] SQLAlchemy 2.0 models with type hints
+- [x] Database connection management (local + AWS)
 - [x] Initialization scripts
 
 ### 📋 Phase 2: Log Processing Pipeline
@@ -314,50 +317,70 @@ See `project-scope.md` for 15+ additional complex queries.
 
 ### Test Database Connection
 ```bash
-python scripts/test_connection.py
+cd backend
+uv run python scripts/test_connection.py
 ```
 
 ### Run Unit Tests (coming)
 ```bash
-pytest tests/
+cd backend
+uv run pytest
 ```
 
 ## 📝 Development Commands
 
 ### Local PostgreSQL Management
 ```bash
-# Start PostgreSQL
-docker-compose up -d
+# Start PostgreSQL (Docker Compose V2)
+docker compose up -d
 
 # Stop PostgreSQL
-docker-compose down
+docker compose down
 
 # View logs
-docker-compose logs -f postgres
+docker compose logs -f postgres
 
 # Access PostgreSQL CLI
-docker-compose exec postgres psql -U analytics_admin -d analytics
+docker compose exec postgres psql -U analytics_admin -d analytics
 
 # Start with pgAdmin (for GUI management)
-docker-compose --profile tools up -d
+docker compose --profile tools up -d
 # Access at http://localhost:5050
 ```
 
-### Database Management
+### Backend Development
 ```bash
+cd backend
+
+# Install dependencies
+uv sync
+
 # Initialize database (create tables)
-python scripts/init_database.py
+uv run python scripts/init_database.py
 
 # Drop and recreate tables (CAUTION!)
-python scripts/init_database.py --drop
+uv run python scripts/init_database.py --drop
 
 # Test connection
-python scripts/test_connection.py
+uv run python scripts/test_connection.py
+
+# Run tests
+uv run pytest
+
+# Format code
+uv run black .
+uv run ruff check .
 ```
 
 ### AWS Infrastructure
 ```bash
 cd infrastructure
+
+# Install dependencies
+uv sync
+
+# Activate venv and use CDK
+source .venv/bin/activate
 
 # Preview changes
 cdk diff
@@ -369,11 +392,24 @@ cdk deploy
 cdk destroy
 ```
 
+### Streamlit Dashboard
+```bash
+cd streamlit_app
+
+# Install dependencies
+uv sync
+
+# Run dashboard
+uv run streamlit run Home.py
+```
+
 ## 📚 Documentation
 
 - **[project-scope.md](project-scope.md)** - Detailed project requirements and specifications
 - **[infrastructure/README.md](infrastructure/README.md)** - AWS CDK infrastructure documentation
-- **Database Schema** - See `database/models.py` for full schema with comments
+- **[backend/README.md](backend/README.md)** - Backend services documentation
+- **[streamlit_app/README.md](streamlit_app/README.md)** - Dashboard documentation
+- **Database Schema** - See `backend/database/models.py` for full schema with comments
 
 ## 🔐 Security Considerations
 

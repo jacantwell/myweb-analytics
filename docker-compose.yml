@@ -1,4 +1,5 @@
-version: '3.8'
+# Docker Compose file for local PostgreSQL development
+# Use Docker Compose V2: docker compose up -d
 
 services:
   # PostgreSQL database for local development
