@@ -320,7 +320,7 @@ def main():
     generator = CloudFrontLogGenerator()
 
     # Create sample_logs directory
-    sample_logs_dir = Path(__file__).parent.parent.parent / "sample_logs"
+    sample_logs_dir = Path(__file__).parent.parent / "sample_logs"
     sample_logs_dir.mkdir(exist_ok=True)
 
     # Generate 7 days of logs
