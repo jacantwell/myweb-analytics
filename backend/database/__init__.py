@@ -6,7 +6,7 @@ This package contains:
 - Database connection and session management
 - Query utilities and data access layer
 """
-from database.models import (
+from .models import (
     Base,
     PageView,
     Session,
@@ -14,9 +14,10 @@ from database.models import (
     DailyMetric,
     URLMetadata,
 )
-from database.connection import (
+from .connection import (
     get_engine,
     get_session,
+    get_db_session,
     init_db,
 )
 
@@ -29,5 +30,6 @@ __all__ = [
     "URLMetadata",
     "get_engine",
     "get_session",
+    "get_db_session",
     "init_db",
 ]

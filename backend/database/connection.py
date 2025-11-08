@@ -16,7 +16,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
 
-from database.models import Base
+from .models import Base
 
 
 class DatabaseConfig:
@@ -269,3 +269,19 @@ class DatabaseSession:
         else:
             self.session.commit()
         self.session.close()
+
+
+# Convenience function for getting database session context manager
+def get_db_session():
+    """
+    Get a database session context manager.
+
+    Returns:
+        DatabaseSession context manager
+
+    Usage:
+        with get_db_session() as session:
+            session.add(obj)
+            # Automatically commits on success, rolls back on exception
+    """
+    return DatabaseSession()
