@@ -10,7 +10,7 @@ from typing import Optional
 from urllib.parse import quote_plus
 
 import boto3
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
@@ -232,7 +232,7 @@ def test_connection() -> bool:
     try:
         engine = get_engine()
         with engine.connect() as conn:
-            result = conn.execute("SELECT version()")
+            result = conn.execute(text("SELECT version();"))
             version = result.scalar()
             print(f"✅ Connected to PostgreSQL: {version}")
             return True
