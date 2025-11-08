@@ -56,12 +56,17 @@ CloudFront (with logging) → S3 Logs → Log Processor → PostgreSQL → Strea
    # Edit .env and ensure USE_AWS_RDS=false for local development
    ```
 
-4. **Start PostgreSQL with Docker Compose V2**
+4. **Start the Docker Daemon** (if not already running)
+   ```bash
+   sudo systemctl start docker
+   ```
+
+5. **Start PostgreSQL with Docker Compose V2**
    ```bash
    docker compose up -d
    ```
 
-5. **Set up backend (database & log processing)**
+6. **Set up backend (database & log processing)**
    ```bash
    cd backend
    uv sync
@@ -70,7 +75,7 @@ CloudFront (with logging) → S3 Logs → Log Processor → PostgreSQL → Strea
    cd ..
    ```
 
-6. **Run the Streamlit dashboard** (coming in Phase 4)
+7. **Run the Streamlit dashboard** (coming in Phase 4)
    ```bash
    cd streamlit_app
    uv sync
