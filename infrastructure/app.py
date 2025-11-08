@@ -12,7 +12,7 @@ app = App()
 # Get AWS account and region from environment or CDK context
 env = Environment(
     account=os.environ.get('CDK_DEFAULT_ACCOUNT'),
-    region=os.environ.get('CDK_DEFAULT_REGION', 'us-east-1')
+    region=os.environ.get('CDK_DEFAULT_REGION', 'eu-west-1')
 )
 
 # Create the analytics stack
