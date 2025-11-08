@@ -86,11 +86,11 @@ class AnalyticsStack(Stack):
         # Allow connections from your local machine (optional - for development)
         # You can add your IP here or use Systems Manager Session Manager for secure access
         # Uncomment and set your IP range if needed:
-        # db_security_group.add_ingress_rule(
-        #     peer=ec2.Peer.ipv4("YOUR_IP/32"),
-        #     connection=ec2.Port.tcp(5432),
-        #     description="Allow connections from development machine",
-        # )
+        db_security_group.add_ingress_rule(
+            peer=ec2.Peer.ipv4("49.36.223.139/32"),
+            connection=ec2.Port.tcp(5432),
+            description="Allow connections from development machine",
+        )
 
         # ==========================================
         # RDS PostgreSQL Database
@@ -114,7 +114,7 @@ class AnalyticsStack(Stack):
             self,
             "AnalyticsDatabase",
             engine=rds.DatabaseInstanceEngine.postgres(
-                version=rds.PostgresEngineVersion.VER_15_4
+                version=rds.PostgresEngineVersion.VER_17_4
             ),
             instance_type=ec2.InstanceType.of(
                 ec2.InstanceClass.BURSTABLE3,
@@ -141,7 +141,7 @@ class AnalyticsStack(Stack):
             parameter_group=rds.ParameterGroup.from_parameter_group_name(
                 self,
                 "ParameterGroup",
-                "default.postgres15",
+                "default.postgres17",
             ),
         )
 
