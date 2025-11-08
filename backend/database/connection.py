@@ -8,6 +8,7 @@ import json
 import os
 from typing import Optional
 from urllib.parse import quote_plus
+from dotenv import load_dotenv
 
 import boto3
 from sqlalchemy import create_engine, event, text
@@ -22,6 +23,9 @@ class DatabaseConfig:
     """Database configuration that works for both local and AWS environments"""
 
     def __init__(self):
+
+        load_dotenv()  # Load environment variables from .env file
+
         self.env = os.getenv("ENVIRONMENT", "local")  # local, development, production
         self.use_aws = os.getenv("USE_AWS_RDS", "false").lower() == "true"
 
@@ -33,6 +37,8 @@ class DatabaseConfig:
         - Local development (Docker PostgreSQL)
         - AWS RDS (with credentials from Secrets Manager or environment variables)
         """
+        print(f"Using AWS RDS: {self.use_aws}")
+
         if self.use_aws:
             return self._get_aws_connection_url()
         else:
@@ -100,7 +106,7 @@ class DatabaseConfig:
         Returns:
             Dictionary containing 'username' and 'password'
         """
-        region = os.getenv("AWS_REGION", "us-east-1")
+        region = os.getenv("AWS_REGION", "eu-west-1")
         session = boto3.session.Session()
         client = session.client(service_name="secretsmanager", region_name=region)
 
@@ -109,6 +115,7 @@ class DatabaseConfig:
             secret_string = response["SecretString"]
             return json.loads(secret_string)
         except Exception as e:
+            print(e)
             raise RuntimeError(f"Failed to retrieve secret from AWS: {e}")
 
 
